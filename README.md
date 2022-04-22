@@ -1,0 +1,2 @@
+# hashAward
+hash开奖
