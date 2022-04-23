@@ -11,8 +11,9 @@ contract HashAward {
     mapping(uint256 =>  address [] ) public  turnsPlayers;
     mapping(uint256 => address  ) public turnsWinner;
     mapping(uint256 => uint256) public turnsHash;
-    mapping(uint256 => uint256) public turnsValues;
+    mapping(uint256 => uint256) public turnsTotalPool;
     mapping(uint256 => uint8) public turnsActions;
+    mapping(uint256 => uint256) public turnsWainnerId;
     mapping(uint8 => string)  ActionsMessage;
 
     constructor (){
@@ -25,14 +26,16 @@ contract HashAward {
         ActionsMessage[1] = 'start already';
         ActionsMessage[2] = 'need draw a lottery';
         ActionsMessage[3] = 'over';
-        oneBetFee=1e16;
+        oneBetFee=1e16 wei;
         loudFee100=5;
     }
-    //error this
-    function getNowturnsPlayers() public view returns( address[]){
+
+    function getNowturnsPlayers() public view returns( address  [] memory ){
         return  turnsPlayers[nowTurn];
     }
-
+    function getOneturnsPlayers(uint256 turnId) public view returns( address  [] memory ){
+        return  turnsPlayers[turnId];
+    }
 
 
     modifier onlyManager(){
@@ -60,34 +63,39 @@ contract HashAward {
         return string(res);
     }
 
-    function bet() public checkPause payable{
-
+    function bet(uint256 turn) public checkPause payable{
+        require(turn==nowTurn,'the turn can not bet');
         require(turnsActions[nowTurn]==1,'now turn can not bet');
-        require(msg.value==oneBetFee,'bet fee error');
+        require(uint256(msg.value)==oneBetFee,'bet fee error');
         turnsPlayers[nowTurn].push(msg.sender);
-        turnsValues[nowTurn]+=oneBetFee;
+        turnsTotalPool[nowTurn]+=oneBetFee;
         if(turnsPlayers[nowTurn].length>=maxPlayersOneTurn){
             turnsActions[nowTurn]=2;
             openAward ();
         }
     }
-    function overBet() onlyManager public {
+    function overBet(uint256 turn) onlyManager  public {
+        require(turn==nowTurn,'the turn can not over bet');
         require(turnsActions[nowTurn]==1,'now turn can not over bet');
         turnsActions[nowTurn]=2;
     }
-    function openAward () public{
+    function openAward ()  checkPause public{
         require(turnsActions[nowTurn]==2,'now turn can not open award');
         turnsHash[nowTurn]= uint256( keccak256(abi.encodePacked(turnsPlayers[nowTurn],block.difficulty,block.timestamp)));
         if(turnsPlayers[nowTurn].length>=1){
             if(turnsPlayers[nowTurn].length==1){
                 turnsWinner[nowTurn]=turnsPlayers[nowTurn][0];
             }else{
-                turnsWinner[nowTurn]=turnsPlayers[nowTurn][turnsHash[nowTurn]%turnsPlayers[nowTurn].length] ;
+                uint256  _playerId=turnsHash[nowTurn]%(turnsPlayers[nowTurn].length);
+                turnsWainnerId[nowTurn]=_playerId;
+                turnsWinner[nowTurn]=turnsPlayers[nowTurn][_playerId] ;
             }
-            payable(turnsWinner[nowTurn]).transfer(uint256(turnsValues[nowTurn]*loudFee100/100));
+            payable(turnsWinner[nowTurn]).transfer(uint256(turnsTotalPool[nowTurn]*(100-loudFee100)/100));
         }
         turnsActions[nowTurn]=3;
         nowTurn+=1;
+        turnsActions[nowTurn]=1;
     }
-
+//todo 管理员提取管理费
 }
+
