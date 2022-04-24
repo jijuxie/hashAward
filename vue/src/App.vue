@@ -78,7 +78,7 @@ export default {
       allTurnsData: [],
       allTurnsDataDeas: [],
       turn: 0,
-      contractAddress: '0x6a427637528da0ca9a894ecc29ebd820a8d694f4',
+      contractAddress: '0x6Cb392ca7A23244f31A0003D6B25Aebe8594D3c9',
       rpc: 'https://data-seed-prebsc-2-s3.binance.org:8545/',
       loading: 1
     }
@@ -114,7 +114,7 @@ export default {
         const Contract = await new ethers.Contract(this.contractAddress, abi, signer);
         const tx = await Contract.bet(turn, {
           value: Contract.oneBetFee(),
-          gasLimit: 200000,
+          gasLimit: 500000,
           gasPrice: await Provider.getGasPrice()
         })
         const waitData = await tx.wait();
@@ -150,7 +150,7 @@ export default {
         const signer = Provider.getSigner()
         const Contract = await new ethers.Contract(this.contractAddress, abi, signer);
         const tx = await Contract.openAward({
-          gasLimit: 200000,
+          gasLimit: 500000,
           gasPrice: await Provider.getGasPrice()
         })
         const waitData = await tx.wait();

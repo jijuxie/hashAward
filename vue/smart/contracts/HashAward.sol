@@ -91,11 +91,12 @@ contract HashAward {
                 turnsWinner[nowTurn]=turnsPlayers[nowTurn][_playerId] ;
             }
             payable(turnsWinner[nowTurn]).transfer(uint256(turnsTotalPool[nowTurn]*(100-loudFee100)/100));
+            //同时支付管理费
+            payable(manager).transfer(uint256(turnsTotalPool[nowTurn]*(loudFee100)/100));
         }
         turnsActions[nowTurn]=3;
         nowTurn+=1;
         turnsActions[nowTurn]=1;
     }
-//todo 管理员提取管理费
-}
 
+}
